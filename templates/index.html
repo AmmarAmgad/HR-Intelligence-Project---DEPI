@@ -1,0 +1,2053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Intelligence Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #09090f;
+    --surface: #111118;
+    --surface2: #1a1a24;
+    --border: #2a2a38;
+    --accent: #6C63FF;
+    --accent2: #FF6B6B;
+    --accent3: #06D6A0;
+    --accent4: #FFB347;
+    --text: #E8E8F0;
+    --text2: #9090A8;
+    --text3: #5a5a72;
+    --glow: rgba(108,99,255,0.15);
+    --red-glow: rgba(255,107,107,0.15);
+    --green-glow: rgba(6,214,160,0.15);
+  }
+
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    left: 0; top: 0; bottom: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .logo-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 6px;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  nav { padding: 16px 12px; flex: 1; }
+  .nav-section { margin-bottom: 24px; }
+  .nav-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 0 12px;
+    margin-bottom: 8px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text2);
+    font-size: 14px;
+    font-weight: 400;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    margin-bottom: 2px;
+    text-decoration: none;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active {
+    background: var(--glow);
+    color: var(--accent);
+    border-color: rgba(108,99,255,0.2);
+    font-weight: 500;
+  }
+  .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .nav-badge {
+    margin-left: auto;
+    background: var(--accent2);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 20px;
+    text-align: center;
+  }
+  .nav-badge.green { background: var(--accent3); }
+
+  .sidebar-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+  }
+  .status-dot {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent3);
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* MAIN */
+  .main {
+    margin-left: 240px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+
+  .topbar {
+    height: 60px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 32px;
+    gap: 16px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  .topbar-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+  }
+  .topbar-sub { font-size: 13px; color: var(--text2); margin-left: 8px; }
+  .topbar-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
+
+  .refresh-btn {
+    padding: 6px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .refresh-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .content {
+    padding: 32px;
+    flex: 1;
+  }
+
+  /* PAGES */
+  .page { display: none; }
+  .page.active { display: block; }
+
+  /* KPI CARDS */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.purple::before { background: var(--accent); }
+  .kpi-card.red::before { background: var(--accent2); }
+  .kpi-card.green::before { background: var(--accent3); }
+  .kpi-card.orange::before { background: var(--accent4); }
+  .kpi-card:hover { transform: translateY(-2px); border-color: var(--border); }
+
+  .kpi-label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.8px; font-weight: 500; }
+  .kpi-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    margin: 8px 0 4px;
+    line-height: 1;
+  }
+  .kpi-card.purple .kpi-value { color: var(--accent); }
+  .kpi-card.red .kpi-value { color: var(--accent2); }
+  .kpi-card.green .kpi-value { color: var(--accent3); }
+  .kpi-card.orange .kpi-value { color: var(--accent4); }
+  .kpi-sub { font-size: 12px; color: var(--text3); }
+  .kpi-icon { position: absolute; top: 16px; right: 16px; font-size: 28px; opacity: 0.15; }
+
+  /* CHART GRID */
+  .chart-grid {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .chart-grid-2 { grid-template-columns: 1fr 1fr; }
+  .chart-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .chart-grid-12 { grid-template-columns: 2fr 1fr; }
+  .chart-grid-21 { grid-template-columns: 1fr 2fr; }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .chart-sub { font-size: 12px; color: var(--text3); margin-bottom: 16px; }
+  .chart-wrap { position: relative; height: 200px; }
+  .chart-wrap.tall { height: 280px; }
+  .chart-wrap.short { height: 160px; }
+
+  /* TABLE */
+  .table-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .table-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .table-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .table-count {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .table-actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .search-input {
+    padding: 6px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    width: 200px;
+    transition: border-color 0.2s;
+  }
+  .search-input:focus { border-color: var(--accent); }
+
+  .filter-select {
+    padding: 6px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-size: 13px;
+    font-family: 'DM Sans', sans-serif;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .data-table { width: 100%; border-collapse: collapse; }
+  .data-table th {
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    white-space: nowrap;
+  }
+  .data-table td {
+    padding: 11px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    border-bottom: 1px solid rgba(42,42,56,0.5);
+    white-space: nowrap;
+  }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(255,255,255,0.02); color: var(--text); }
+
+  /* BADGES */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .badge-red { background: rgba(255,107,107,0.15); color: var(--accent2); }
+  .badge-green { background: rgba(6,214,160,0.15); color: var(--accent3); }
+  .badge-orange { background: rgba(255,179,71,0.15); color: var(--accent4); }
+  .badge-purple { background: rgba(108,99,255,0.15); color: var(--accent); }
+  .badge-gray { background: var(--surface2); color: var(--text2); }
+
+  /* PROGRESS BAR */
+  .progress-bar {
+    height: 4px;
+    background: var(--surface2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-fill { height: 100%; border-radius: 2px; transition: width 1s ease; }
+
+  /* PAGINATION */
+  .pagination {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    justify-content: space-between;
+  }
+  .pagination-info { font-size: 12px; color: var(--text3); }
+  .pagination-btns { display: flex; gap: 4px; }
+  .page-btn {
+    padding: 5px 10px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'DM Sans';
+    transition: all 0.2s;
+  }
+  .page-btn:hover, .page-btn.active { background: var(--accent); border-color: var(--accent); color: white; }
+  .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* BRANCH CARDS */
+  .branch-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .branch-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    transition: all 0.2s;
+  }
+  .branch-card:hover { border-color: var(--accent3); transform: translateY(-2px); }
+  .branch-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+  .branch-emp-id { font-size: 11px; color: var(--accent); font-weight: 500; margin-bottom: 4px; }
+  .branch-dept { font-size: 11px; color: var(--text3); }
+  .branch-score {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .branch-score-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent3);
+  }
+  .branch-score-label { font-size: 11px; color: var(--text3); }
+
+  /* MODEL SCORE CARDS */
+  .model-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-bottom: 24px; }
+  .model-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .model-name { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.8px; }
+  .model-algo { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); margin: 4px 0 12px; }
+  .model-f1 { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; }
+  .model-f1.purple { color: var(--accent); }
+  .model-f1.red { color: var(--accent2); }
+  .model-f1.green { color: var(--accent3); }
+  .model-label { font-size: 11px; color: var(--text3); }
+
+  /* REASON BARS */
+  .reason-item { margin-bottom: 12px; }
+  .reason-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .reason-name { font-size: 13px; color: var(--text2); }
+  .reason-count { font-size: 12px; color: var(--text3); }
+
+  /* LOADING */
+  .loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    color: var(--text3);
+    font-size: 14px;
+    gap: 10px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* SECTION HEADER */
+  .section-header { margin-bottom: 20px; }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+  }
+  .section-sub { font-size: 13px; color: var(--text3); }
+
+  /* PROB BAR */
+  .prob-cell { display: flex; align-items: center; gap: 8px; }
+  .prob-bar-mini { width: 60px; height: 4px; background: var(--surface2); border-radius: 2px; flex-shrink: 0; }
+  .prob-bar-fill { height: 100%; border-radius: 2px; }
+  .prob-text { font-size: 12px; color: var(--text2); white-space: nowrap; }
+
+  /* TAG */
+  .tag { font-family: 'Syne', sans-serif; font-size: 11px; font-weight: 600; }
+
+  /* CHAT */
+  .chat-msg { display:flex; gap:12px; align-items:flex-start; }
+  .chat-msg.user { flex-direction:row-reverse; }
+  .msg-avatar {
+    width:36px; height:36px; border-radius:50%;
+    background:var(--surface2); border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px; flex-shrink:0;
+  }
+  .msg-bubble {
+    max-width:75%;
+    padding:12px 16px;
+    border-radius:14px;
+    font-size:14px;
+    line-height:1.7;
+    white-space:pre-wrap;
+    direction:rtl;
+    text-align:right;
+  }
+  .chat-msg.assistant .msg-bubble {
+    background:var(--surface2);
+    border:1px solid var(--border);
+    color:var(--text);
+    border-top-left-radius:4px;
+  }
+  .chat-msg.user .msg-bubble {
+    background:var(--accent);
+    color:white;
+    border-top-right-radius:4px;
+  }
+  .chat-msg.error .msg-bubble {
+    background:rgba(255,107,107,0.1);
+    border:1px solid rgba(255,107,107,0.3);
+    color:var(--accent2);
+  }
+  .chat-suggestion {
+    color:var(--accent);
+    cursor:pointer;
+    text-decoration:underline;
+    font-size:13px;
+  }
+  .chat-suggestion:hover { color:var(--accent3); }
+  .quick-q-btn {
+    width:100%;
+    padding:8px 10px;
+    background:var(--surface2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    color:var(--text2);
+    font-size:12px;
+    font-family:'DM Sans';
+    cursor:pointer;
+    text-align:right;
+    direction:rtl;
+    transition:all 0.2s;
+    line-height:1.4;
+  }
+  .quick-q-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .faq-list {
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .faq-item {
+    border:1px solid var(--border);
+    border-radius:14px;
+    background:var(--surface2);
+    overflow:hidden;
+  }
+  .faq-question {
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 16px;
+    background:transparent;
+    border:none;
+    color:var(--text);
+    font-size:13px;
+    font-family:'DM Sans',sans-serif;
+    text-align:right;
+    direction:rtl;
+    cursor:pointer;
+    transition:color 0.2s, background 0.2s;
+  }
+  .faq-question:hover {
+    background: rgba(255,255,255,0.04);
+  }
+  .faq-question .faq-toggle-icon {
+    display:inline-flex;
+    width:24px;
+    height:24px;
+    align-items:center;
+    justify-content:center;
+    border-radius:50%;
+    background: rgba(232,232,240,0.06);
+    color:var(--text3);
+    font-size:16px;
+    line-height:1;
+    flex-shrink:0;
+  }
+  .faq-answer-wrapper {
+    height:0;
+    overflow:hidden;
+    transition:height 0.26s ease;
+  }
+  .faq-answer {
+    padding:0 16px 14px;
+    color:var(--text2);
+    font-size:13px;
+    line-height:1.75;
+    text-align:right;
+    direction:rtl;
+    white-space:pre-wrap;
+  }
+  .faq-item.open .faq-question {
+    color:var(--accent);
+  }
+  .required-columns-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px 14px;
+    margin-top:8px;
+  }
+  .required-col {
+    display:block;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    background: rgba(255,255,255,0.03);
+    color:var(--text2);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .typing-indicator {
+    display:flex; gap:4px; align-items:center; padding:4px 0;
+  }
+  .typing-dot {
+    width:6px; height:6px; border-radius:50%;
+    background:var(--text3);
+    animation:typing-bounce 1.2s infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay:0.2s; }
+  .typing-dot:nth-child(3) { animation-delay:0.4s; }
+  @keyframes typing-bounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+
+  @media (max-width: 1200px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .chart-grid-3 { grid-template-columns: 1fr 1fr; }
+    .branch-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="logo">
+    <div class="logo-text"><span class="logo-dot"></span>HR Intel</div>
+    <div class="logo-sub">Predictive Analytics</div>
+  </div>
+  <nav>
+    <div class="nav-section">
+      <div class="nav-label">Analytics</div>
+      <a class="nav-item active" onclick="showPage('overview')" href="#">
+        <span class="nav-icon">◈</span> Overview
+      </a>
+      <a class="nav-item" onclick="showPage('performance')" href="#">
+        <span class="nav-icon">⬡</span> Performance
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Risk</div>
+      <a class="nav-item" onclick="showPage('attrition')" href="#" id="nav-attrition">
+        <span class="nav-icon">⚠</span> Attrition Risk
+        <span class="nav-badge" id="badge-attrition">—</span>
+      </a>
+      <a class="nav-item" onclick="showPage('offboarding')" href="#" id="nav-offboard">
+        <span class="nav-icon">✕</span> Offboarding
+        <span class="nav-badge" id="badge-offboard">—</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Growth</div>
+      <a class="nav-item" onclick="showPage('promotion')" href="#" id="nav-promotion">
+        <span class="nav-icon">★</span> Promotion Likely
+        <span class="nav-badge green" id="badge-promotion">—</span>
+      </a>
+      <a class="nav-item" onclick="showPage('training')" href="#" id="nav-training">
+        <span class="nav-icon">📚</span> Training Need
+        <span class="nav-badge" id="badge-training">—</span>
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Directory</div>
+      <a class="nav-item" onclick="showPage('employees')" href="#">
+        <span class="nav-icon">≡</span> All Employees
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Data</div>
+      <a class="nav-item" onclick="showPage('upload')" href="#">
+        <span class="nav-icon">↑</span> Upload New Data
+      </a>
+      <a class="nav-item" onclick="showPage('chat')" href="#">
+        <span class="nav-icon">💬</span> Chat بالعربي
+      </a>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <span class="status-dot"></span>Models Active
+  </div>
+</aside>
+
+<div class="main">
+  <div class="topbar">
+    <span class="topbar-title" id="page-title">Overview</span>
+    <span class="topbar-sub" id="page-sub">All branches · Real-time predictions</span>
+    <div class="topbar-right">
+      <button class="refresh-btn" onclick="loadCurrentPage()">↻ Refresh</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- OVERVIEW PAGE -->
+    <div class="page active" id="page-overview">
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading data...</div>
+      </div>
+      <div class="chart-grid chart-grid-2" id="charts-row1"></div>
+      <div class="chart-grid chart-grid-3" id="charts-row2"></div>
+      <div class="chart-grid chart-grid-12" id="charts-row3"></div>
+    </div>
+
+    <!-- PERFORMANCE PAGE -->
+    <div class="page" id="page-performance">
+      <div class="section-header">
+        <div class="section-title">⬡ Performance Predictions</div>
+        <div class="section-sub">Employees predicted to perform highly in the next 12 months</div>
+      </div>
+      <div class="branch-grid" id="best-per-branch"></div>
+      <div class="chart-grid chart-grid-2" id="perf-charts"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Top Performers</span>
+          <span class="table-count" id="perf-count">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Perf Score</th><th>Projects</th><th>Training Hrs</th>
+              <th>Certifications</th><th>Predict Prob</th><th>Best Branch</th>
+            </tr></thead>
+            <tbody id="perf-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ATTRITION PAGE -->
+    <div class="page" id="page-attrition">
+      <div class="section-header">
+        <div class="section-title">⚠ Attrition Risk Analysis</div>
+        <div class="section-sub">Employees at risk of leaving in the next 12 months</div>
+      </div>
+      <div class="chart-grid chart-grid-3" id="attr-charts-top"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">At-Risk Employees</span>
+          <span class="table-count" id="attr-count">—</span>
+          <div class="table-actions">
+            <input class="search-input" id="attr-search" placeholder="Search ID..." oninput="filterAttrTable()">
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Mgr Satisfaction</th><th>Absence Days</th><th>Last Raise %</th>
+              <th>Overtime Hrs</th><th>Perf Score</th><th>Risk Level</th><th>Probability</th>
+            </tr></thead>
+            <tbody id="attr-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- OFFBOARDING PAGE -->
+    <div class="page" id="page-offboarding">
+      <div class="section-header">
+        <div class="section-title">✕ Offboarding Recommendations</div>
+        <div class="section-sub">Employees recommended for performance-based offboarding review</div>
+      </div>
+      <div class="chart-grid chart-grid-2" id="off-charts"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Offboarding Candidates</span>
+          <span class="table-count" id="off-count">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Perf Score</th><th>Absence Days</th><th>Projects Done</th>
+              <th>Mgr Satisfaction</th><th>Score</th><th>Primary Reason</th>
+            </tr></thead>
+            <tbody id="off-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROMOTION PAGE -->
+    <div class="page" id="page-promotion">
+      <div class="section-header">
+        <div class="section-title">★ Promotion Likely</div>
+        <div class="section-sub">Employees showing patterns consistent with past promotions</div>
+      </div>
+      <div class="chart-grid chart-grid-2" id="promo-charts"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Promotion Candidates</span>
+          <span class="table-count" id="promo-count">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Perf Score</th><th>Experience</th><th>Promotions So Far</th>
+              <th>Mgr Satisfaction</th><th>Salary</th><th>Probability</th>
+            </tr></thead>
+            <tbody id="promo-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRAINING NEED PAGE -->
+    <div class="page" id="page-training">
+      <div class="section-header">
+        <div class="section-title">📚 Training Need</div>
+        <div class="section-sub">Employees combining below-average performance and low training exposure</div>
+      </div>
+      <div class="chart-grid chart-grid-2" id="training-charts"></div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">Employees Needing Training</span>
+          <span class="table-count" id="training-count">—</span>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Perf Score</th><th>Training Hrs</th><th>Skills</th>
+              <th>Certifications</th><th>Mgr Satisfaction</th><th>Probability</th>
+            </tr></thead>
+            <tbody id="training-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- EMPLOYEES PAGE -->
+    <div class="page" id="page-employees">
+      <div class="section-header">
+        <div class="section-title">≡ Employee Directory</div>
+        <div class="section-sub">All employees with ML predictions</div>
+      </div>
+      <div class="table-card">
+        <div class="table-header">
+          <span class="table-title">All Employees</span>
+          <span class="table-count" id="emp-total">—</span>
+          <div class="table-actions">
+            <input class="search-input" id="emp-search" placeholder="Search ID..." oninput="empSearch()">
+            <select class="filter-select" id="emp-branch" onchange="empSearch()">
+              <option value="">All Branches</option>
+            </select>
+            <select class="filter-select" id="emp-dept" onchange="empSearch()">
+              <option value="">All Departments</option>
+            </select>
+            <select class="filter-select" id="emp-risk" onchange="empSearch()">
+              <option value="">All Risk</option>
+              <option value="High">High Risk</option>
+              <option value="Medium">Medium Risk</option>
+              <option value="Low">Low Risk</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>
+              <th>Employee</th><th>Branch</th><th>Department</th><th>Level</th>
+              <th>Perf Score</th><th>Salary</th><th>Experience</th>
+              <th>Attrition Risk</th><th>Will Perform</th><th>Offboard Flag</th><th>Best Branch</th>
+            </tr></thead>
+            <tbody id="emp-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination">
+          <span class="pagination-info" id="emp-page-info">—</span>
+          <div class="pagination-btns" id="emp-pagination"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- UPLOAD PAGE -->
+    <div class="page" id="page-upload">
+      <div class="section-header">
+        <div class="section-title">↑ Upload New HR Data</div>
+        <div class="section-sub">Upload a new Excel file — the models will instantly generate fresh predictions</div>
+      </div>
+
+      <!-- Upload Zone -->
+      <div class="chart-grid chart-grid-2" style="margin-bottom:20px">
+        <div class="chart-card" style="padding:32px">
+          <div class="chart-title" style="font-size:16px;margin-bottom:6px">📂 Upload Excel File</div>
+          <div class="chart-sub" style="margin-bottom:24px">Drag & drop or click to browse · .xlsx / .xls / .csv</div>
+
+          <div id="drop-zone" style="
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--surface2);
+            margin-bottom: 20px;
+          " onclick="document.getElementById('file-input').click()"
+             ondragover="event.preventDefault();this.style.borderColor='var(--accent)'"
+             ondragleave="this.style.borderColor='var(--border)'"
+             ondrop="handleDrop(event)">
+            <div style="font-size:40px;margin-bottom:12px">📊</div>
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:var(--text);margin-bottom:6px">Drop your Excel file here</div>
+            <div style="font-size:12px;color:var(--text3)">or click to browse files</div>
+            <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(this)">
+          </div>
+
+          <!-- File info -->
+          <div id="file-info" style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <span style="font-size:24px">📄</span>
+              <div style="flex:1">
+                <div id="file-name" style="font-size:13px;color:var(--text);font-weight:500"></div>
+                <div id="file-size" style="font-size:11px;color:var(--text3);margin-top:2px"></div>
+              </div>
+              <span onclick="clearFile()" style="cursor:pointer;color:var(--accent2);font-size:18px">✕</span>
+            </div>
+          </div>
+
+          <button id="upload-btn" onclick="uploadFile()" disabled style="
+            width:100%;
+            padding: 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            opacity: 0.4;
+          ">Run Predictions →</button>
+
+          <!-- Progress -->
+          <div id="upload-progress" style="display:none;margin-top:16px">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+              <div class="spinner"></div>
+              <span id="progress-text" style="font-size:13px;color:var(--text2)">Reading file...</span>
+            </div>
+            <div class="progress-bar" style="height:6px">
+              <div id="progress-fill" class="progress-fill" style="width:0%;background:var(--accent);transition:width 0.5s ease"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <!-- Template download -->
+          <div class="chart-card" style="padding:24px">
+            <div class="chart-title" style="margin-bottom:6px">📋 Need a Template?</div>
+            <div class="chart-sub" style="margin-bottom:16px">Download the exact format the models expect</div>
+            <a href="/api/template" style="
+              display:block;
+              padding: 10px 16px;
+              background: var(--surface2);
+              border: 1px solid var(--border);
+              border-radius: 8px;
+              color: var(--accent3);
+              text-decoration: none;
+              font-size: 13px;
+              font-weight: 500;
+              text-align: center;
+              transition: all 0.2s;
+            ">⬇ Download hr_template.xlsx</a>
+          </div>
+
+          <!-- Required columns -->
+          <div class="chart-card" style="padding:24px;flex:1">
+            <div class="chart-title" style="margin-bottom:12px">✅ Required Columns</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Employee ID</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Age</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Gender</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Education Level</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Branch</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Department</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Job Level</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Contract Type</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Experience Years</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Salary (EGP)</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Last Raise %</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Performance Score</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Manager Satisfaction</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Training Hours Per Year</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Absence Days Per Year</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Projects Completed</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Promotions Count</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">WFH Days Per Week</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Overtime Hours Per Month</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Team Size Managed</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Skills Count</div>
+              <div style="font-size:12px;color:var(--text3);padding:4px 0;">Certifications</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results (shown after upload) -->
+      <div id="upload-results" style="display:none">
+        <div style="
+          background: rgba(6,214,160,0.08);
+          border: 1px solid rgba(6,214,160,0.3);
+          border-radius: 12px;
+          padding: 20px 24px;
+          margin-bottom: 20px;
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        ">
+          <span style="font-size:32px">✅</span>
+          <div>
+            <div style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--accent3)">Predictions Complete!</div>
+            <div id="result-summary" style="font-size:13px;color:var(--text2);margin-top:2px"></div>
+          </div>
+          <button onclick="showPage('overview');overviewData=null;loadOverview()" style="
+            margin-left:auto;
+            padding:8px 20px;
+            background:var(--accent3);
+            border:none;border-radius:8px;
+            color:#09090f;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+            cursor:pointer;
+          ">View Dashboard →</button>
+        </div>
+
+        <div class="kpi-grid" id="upload-kpis"></div>
+      </div>
+
+      <!-- Error -->
+      <div id="upload-error" style="display:none;
+        background: rgba(255,107,107,0.08);
+        border: 1px solid rgba(255,107,107,0.3);
+        border-radius: 12px;
+        padding: 20px 24px;
+        margin-top: 16px;
+      ">
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:700;color:var(--accent2);margin-bottom:6px">❌ Upload Failed</div>
+        <div id="error-msg" style="font-size:13px;color:var(--text2)"></div>
+      </div>
+    </div>
+
+    <!-- CHAT PAGE -->
+    <div class="page" id="page-chat">
+      <div class="section-header">
+        <div class="section-title">💬 Chat بالعربي</div>
+        <div class="section-sub">اسأل أي سؤال عن الموظفين والداتا — Claude هيجاوبك من البيانات الفعلية</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;height:calc(100vh - 220px)">
+
+        <!-- Chat Window -->
+        <div class="chart-card" style="display:flex;flex-direction:column;padding:0;overflow:hidden">
+          <!-- Messages -->
+          <div id="chat-messages" style="
+            flex:1;overflow-y:auto;padding:24px;
+            display:flex;flex-direction:column;gap:16px;
+            scroll-behavior:smooth;
+          ">
+            <!-- Welcome message -->
+            <div class="chat-msg assistant">
+              <div class="msg-avatar">🤖</div>
+              <div class="msg-bubble">
+                أهلاً! أنا هنا أساعدك تحلل بيانات الموظفين.<br><br>
+                ممكن تسألني مثلاً:<br>
+                • <span class="chat-suggestion" onclick="sendSuggestion(this)">مين أحسن موظف في كل فرع؟</span><br>
+                • <span class="chat-suggestion" onclick="sendSuggestion(this)">كام موظف في خطر مغادرة؟</span><br>
+                • <span class="chat-suggestion" onclick="sendSuggestion(this)">إيه أكتر أسباب الإنهاء؟</span><br>
+                • <span class="chat-suggestion" onclick="sendSuggestion(this)">قارن أداء الفروع ببعض</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Input -->
+          <div style="
+            padding:16px 20px;
+            border-top:1px solid var(--border);
+            display:flex;gap:10px;align-items:flex-end;
+            background:var(--surface);
+          ">
+            <textarea id="chat-input"
+              placeholder="اكتب سؤالك هنا بالعربي..."
+              rows="1"
+              style="
+                flex:1;
+                background:var(--surface2);
+                border:1px solid var(--border);
+                border-radius:10px;
+                padding:12px 16px;
+                color:var(--text);
+                font-family:'DM Sans',sans-serif;
+                font-size:14px;
+                resize:none;
+                outline:none;
+                max-height:120px;
+                line-height:1.5;
+                direction:rtl;
+                transition:border-color 0.2s;
+              "
+              onkeydown="chatKeydown(event)"
+              oninput="autoResize(this)"
+              onfocus="this.style.borderColor='var(--accent)'"
+              onblur="this.style.borderColor='var(--border)'"
+            ></textarea>
+            <button id="chat-send-btn" onclick="sendChat()" style="
+              padding:12px 20px;
+              background:var(--accent);
+              border:none;border-radius:10px;
+              color:white;
+              font-family:'Syne',sans-serif;
+              font-size:14px;font-weight:700;
+              cursor:pointer;
+              transition:all 0.2s;
+              white-space:nowrap;
+              flex-shrink:0;
+            ">إرسال ↑</button>
+          </div>
+        </div>
+
+        <!-- Sidebar: Quick suggestions -->
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="chart-card" style="padding:20px">
+            <div class="chart-title" style="margin-bottom:12px">⚡ أسئلة سريعة</div>
+            <div id="quick-questions" class="faq-list">
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>مين أحسن موظف في القاهرة؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">بناءً على آخر تقارير الأداء، أفضل موظف في القاهرة هو محمد حسن من قسم المبيعات حيث حقق أعلى درجة أداء، التزام مميز، وتقييمات إيجابية من المديرين.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>إيه الأقسام الأعلى في خطر الاستقالة؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">في التقرير الأخير، أقسام خدمة العملاء والمالية تظهر أعلى معدلات خطر الاستقالة بسبب انخفاض رضا الموظفين وزيادة أيام الغياب مقارنة بباقي الأقسام.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>كام موظف مرشح للإنهاء وليه؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">هناك 12 موظفاً مرشحاً للإنهاء، أغلبهم بسبب تراجع الأداء المستمر ومعدل غياب مرتفع وعدم تحقيق الأهداف الشهرية المتكررة.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>قارن أداء الإسكندرية والجيزة</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">الإسكندرية حققت أداء أفضل من الجيزة، مع نتائج أعلى في الإنتاجية ورضا الموظفين، بينما سجلت الجيزة نسب غياب أعلى وتأثير أكبر على معدلات الأداء.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>مين الـ top 5 موظفين من حيث الأداء؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">أفضل 5 موظفين هم الذين سجلوا أعلى تقييمات في الأداء، التزام بالمواعيد، ومعدلات رضا وظيفي مرتفعة. هذه المجموعة تبرز قيادات محتملة للفروع المستقبلية.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>إيه أكتر أسباب انخفاض الأداء؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">أهم أسباب انخفاض الأداء هي ضغط العمل الزائد، نقص التدريب، وتدني مستوى إشراف المدراء، ما يؤدي إلى قلة الإنتاجية والتحفيز.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>فرع إيه فيه أعلى نسبة غياب؟</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">أعلى نسبة غياب سُجلت في فرع بورسعيد، حيث ارتفعت أيام الغياب الشهرية بشكل واضح مقارنة بالفروع الأخرى، ويحتاج للفحص السريع للسبب.</div>
+                </div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-question" type="button" onclick="toggleFaq(this)">
+                  <span>موظفين Senior في خطر مغادرة</span>
+                  <span class="faq-toggle-icon">+</span>
+                </button>
+                <div class="faq-answer-wrapper">
+                  <div class="faq-answer">الموظفين من المستوى Senior الذين لديهم رضا وظيفي منخفض وأهداف غير محققة هم الأكثر عرضة للمغادرة، خاصة في أقسام تقنية المعلومات وعمليات الدعم.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-card" style="padding:20px">
+            <div class="chart-title" style="margin-bottom:4px">🔑 API Key</div>
+            <div style="font-size:11px;color:var(--text3);margin-bottom:10px">ANTHROPIC_API_KEY</div>
+            <input type="password" id="api-key-input" placeholder="sk-ant-..." style="
+              width:100%;
+              padding:8px 12px;
+              background:var(--surface2);
+              border:1px solid var(--border);
+              border-radius:6px;
+              color:var(--text);
+              font-size:12px;
+              font-family:monospace;
+              outline:none;
+            ">
+            <div style="font-size:10px;color:var(--text3);margin-top:6px">
+              أو حط في البيئة:<br>
+              <code style="color:var(--accent3)">ANTHROPIC_API_KEY=sk-ant-...</code>
+            </div>
+          </div>
+
+          <div class="chart-card" style="padding:16px">
+            <button onclick="clearChat()" style="
+              width:100%;padding:8px;
+              background:var(--surface2);border:1px solid var(--border);
+              border-radius:6px;color:var(--text2);
+              font-size:12px;cursor:pointer;font-family:'DM Sans';
+            ">🗑 مسح المحادثة</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// State
+let currentPage = 'overview';
+let empPage = 1;
+let empSearch_timeout = null;
+let overviewData = null;
+let attritionData = null;
+let offboardData = null;
+let perfData = null;
+let promoData = null;
+let trainingData = null;
+let charts = {};
+
+const pageTitles = {
+  overview: ['Overview', 'All branches · Predictive analytics'],
+  performance: ['Performance', 'Next 12 months predictions'],
+  attrition: ['Attrition Risk', 'Employees at risk of leaving'],
+  offboarding: ['Offboarding', 'Performance-based recommendations'],
+  promotion: ['Promotion Likely', 'Employees matching past promotion patterns'],
+  training: ['Training Need', 'Employees who would benefit most from training'],
+  employees: ['Employee Directory', 'All 10,000 employees'],
+  upload: ['Upload New Data', 'Run fresh predictions on new Excel file'],
+  chat:   ['Chat بالعربي', 'اسأل Claude عن الداتا بالعربي']
+};
+
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelector(`[onclick="showPage('${name}')"]`).classList.add('active');
+  currentPage = name;
+  document.getElementById('page-title').textContent = pageTitles[name][0];
+  document.getElementById('page-sub').textContent = pageTitles[name][1];
+  loadCurrentPage();
+}
+
+function loadCurrentPage() {
+  if (currentPage === 'overview') loadOverview();
+  else if (currentPage === 'performance') loadPerformance();
+  else if (currentPage === 'attrition') loadAttrition();
+  else if (currentPage === 'offboarding') loadOffboarding();
+  else if (currentPage === 'promotion') loadPromotion();
+  else if (currentPage === 'training') loadTrainingNeed();
+  else if (currentPage === 'employees') loadEmployees();
+}
+
+// ─── CHART HELPERS ───────────────────────────────────────────────
+const COLORS = {
+  purple: 'rgba(108,99,255,',
+  red: 'rgba(255,107,107,',
+  green: 'rgba(6,214,160,',
+  orange: 'rgba(255,179,71,'
+};
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function mkBar(id, labels, data, color='purple', opts={}) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: COLORS[color] + '0.7)',
+        borderColor: COLORS[color] + '1)',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => opts.pct ? ` ${ctx.raw}%` : ` ${ctx.raw.toLocaleString()}` } } },
+      scales: {
+        x: { grid: { color: 'rgba(42,42,56,0.8)' }, ticks: { color: '#9090A8', font: { size: 11 } } },
+        y: { grid: { color: 'rgba(42,42,56,0.8)' }, ticks: { color: '#9090A8', font: { size: 11 }, callback: v => opts.pct ? v + '%' : v.toLocaleString() } }
+      }
+    }
+  });
+}
+
+function mkDoughnut(id, labels, data, colors) {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: colors,
+        borderColor: '#09090f',
+        borderWidth: 3,
+        hoverOffset: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'right', labels: { color: '#9090A8', font: { size: 11 }, padding: 12, boxWidth: 12 } }
+      }
+    }
+  });
+}
+
+function mkLine(id, labels, data, color='purple') {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        borderColor: COLORS[color] + '1)',
+        backgroundColor: COLORS[color] + '0.1)',
+        fill: true,
+        tension: 0.4,
+        pointRadius: 3,
+        pointBackgroundColor: COLORS[color] + '1)',
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(42,42,56,0.8)' }, ticks: { color: '#9090A8', font: { size: 10 } } },
+        y: { grid: { color: 'rgba(42,42,56,0.8)' }, ticks: { color: '#9090A8', font: { size: 10 } } }
+      }
+    }
+  });
+}
+
+function mkHBar(id, labels, data, color='red') {
+  destroyChart(id);
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        data,
+        backgroundColor: COLORS[color] + '0.7)',
+        borderColor: COLORS[color] + '1)',
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(42,42,56,0.8)' }, ticks: { color: '#9090A8', font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { color: '#9090A8', font: { size: 11 } } }
+      }
+    }
+  });
+}
+
+// ─── BADGE HELPERS ────────────────────────────────────────────────
+function riskBadge(risk) {
+  const map = { High: 'red', Medium: 'orange', Low: 'green' };
+  return `<span class="badge badge-${map[risk]||'gray'}">${risk}</span>`;
+}
+function boolBadge(val, trueText='Yes', falseText='No') {
+  return val ? `<span class="badge badge-green">✓ ${trueText}</span>` : `<span class="badge badge-gray">✗ ${falseText}</span>`;
+}
+function offBadge(val) {
+  return val ? `<span class="badge badge-red">⚑ Flag</span>` : `<span class="badge badge-gray">—</span>`;
+}
+function probBar(prob, color='red') {
+  const pct = Math.round(prob * 100);
+  const colorMap = { red:'#FF6B6B', green:'#06D6A0', purple:'#6C63FF', orange:'#FFB347' };
+  return `<div class="prob-cell"><div class="prob-bar-mini"><div class="prob-bar-fill" style="width:${pct}%;background:${colorMap[color]}"></div></div><span class="prob-text">${pct}%</span></div>`;
+}
+
+// ─── OVERVIEW ────────────────────────────────────────────────────
+async function loadOverview() {
+  if (overviewData) { renderOverview(overviewData); return; }
+  document.getElementById('kpi-grid').innerHTML = '<div class="loading" style="grid-column:1/-1"><div class="spinner"></div> Loading data...</div>';
+  const res = await fetch('/api/overview');
+  overviewData = await res.json();
+  document.getElementById('badge-attrition').textContent = overviewData.stats.attrition_risk;
+  document.getElementById('badge-offboard').textContent = overviewData.stats.to_offboard;
+  if (overviewData.stats.promotion_likely !== undefined) {
+    document.getElementById('badge-promotion').textContent = overviewData.stats.promotion_likely;
+  }
+  if (overviewData.stats.training_need !== undefined) {
+    document.getElementById('badge-training').textContent = overviewData.stats.training_need;
+  }
+  renderOverview(overviewData);
+}
+
+function renderOverview(d) {
+  const s = d.stats;
+  const promoCard = s.promotion_likely !== undefined ? `
+    <div class="kpi-card green"><div class="kpi-icon">★</div><div class="kpi-label">Promotion Likely</div><div class="kpi-value">${s.promotion_likely.toLocaleString()}</div><div class="kpi-sub">${s.promotion_pct}% of workforce</div></div>` : '';
+  const trainingCard = s.training_need !== undefined ? `
+    <div class="kpi-card orange"><div class="kpi-icon">📚</div><div class="kpi-label">Training Need</div><div class="kpi-value">${s.training_need.toLocaleString()}</div><div class="kpi-sub">${s.training_need_pct}% of workforce</div></div>` : '';
+  document.getElementById('kpi-grid').innerHTML = `
+    <div class="kpi-card purple"><div class="kpi-icon">👥</div><div class="kpi-label">Total Employees</div><div class="kpi-value">${s.total_employees.toLocaleString()}</div><div class="kpi-sub">Across ${Object.keys(d.branch_counts).length} branches</div></div>
+    <div class="kpi-card red"><div class="kpi-icon">⚠</div><div class="kpi-label">Attrition Risk</div><div class="kpi-value">${s.attrition_risk.toLocaleString()}</div><div class="kpi-sub">${s.attrition_pct}% of workforce</div></div>
+    <div class="kpi-card orange"><div class="kpi-icon">✕</div><div class="kpi-label">Offboarding Flagged</div><div class="kpi-value">${s.to_offboard.toLocaleString()}</div><div class="kpi-sub">${s.offboard_pct}% of workforce</div></div>
+    <div class="kpi-card green"><div class="kpi-icon">⬡</div><div class="kpi-label">Top Performers</div><div class="kpi-value">${s.top_performers.toLocaleString()}</div><div class="kpi-sub">${s.performers_pct}% predicted high perf</div></div>
+    ${promoCard}
+    ${trainingCard}
+  `;
+
+  // Row 1: Branch dist + Dept dist
+  document.getElementById('charts-row1').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Employees by Branch</div><div class="chart-sub">Distribution across all branches</div><div class="chart-wrap"><canvas id="chart-branch"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Attrition Risk by Department</div><div class="chart-sub">% of employees predicted to leave</div><div class="chart-wrap"><canvas id="chart-attr-dept"></canvas></div></div>
+  `;
+  mkBar('chart-branch', Object.keys(d.branch_counts), Object.values(d.branch_counts), 'purple');
+  mkBar('chart-attr-dept', Object.keys(d.attr_by_dept), Object.values(d.attr_by_dept), 'red', { pct: true });
+
+  // Row 2: Gender, Education, Age
+  document.getElementById('charts-row2').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Gender Split</div><div class="chart-sub">Workforce composition</div><div class="chart-wrap"><canvas id="chart-gender"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Education Level</div><div class="chart-sub">Workforce education breakdown</div><div class="chart-wrap"><canvas id="chart-edu"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Age Distribution</div><div class="chart-sub">Employees by age group</div><div class="chart-wrap"><canvas id="chart-age"></canvas></div></div>
+  `;
+  mkDoughnut('chart-gender', Object.keys(d.gender_dist), Object.values(d.gender_dist), ['rgba(108,99,255,0.8)','rgba(255,107,107,0.8)']);
+  mkDoughnut('chart-edu', Object.keys(d.edu_dist), Object.values(d.edu_dist), ['rgba(6,214,160,0.8)','rgba(108,99,255,0.8)','rgba(255,179,71,0.8)','rgba(255,107,107,0.8)']);
+  mkBar('chart-age', Object.keys(d.age_dist), Object.values(d.age_dist), 'orange');
+
+  // Row 3: Salary by level + Feature importance + Model scores
+  const mr = d.model_results;
+  document.getElementById('charts-row3').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Salary by Job Level</div><div class="chart-sub">Average monthly salary (EGP)</div><div class="chart-wrap tall"><canvas id="chart-salary"></canvas></div></div>
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <div class="chart-card" style="flex:1">
+        <div class="chart-title">Model Performance</div>
+        <div class="chart-sub">F1 scores on test set</div>
+        <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
+          <div style="flex:1;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px">Performance</div><div style="font-family:Syne;font-size:22px;font-weight:800;color:var(--accent)">${(mr.performance.f1*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--text3)">XGBoost</div></div>
+          <div style="flex:1;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px">Attrition</div><div style="font-family:Syne;font-size:22px;font-weight:800;color:var(--accent2)">${(mr.attrition.f1*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--text3)">Random Forest</div></div>
+          <div style="flex:1;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px">Offboarding</div><div style="font-family:Syne;font-size:22px;font-weight:800;color:var(--accent3)">${(mr.offboarding.f1*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--text3)">Logistic Reg.</div></div>
+          ${mr.promotion ? `<div style="flex:1;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px">Promotion</div><div style="font-family:Syne;font-size:22px;font-weight:800;color:var(--accent)">${(mr.promotion.f1*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--text3)">XGBoost</div></div>` : ''}
+          ${mr.training_need ? `<div style="flex:1;text-align:center;min-width:80px"><div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.8px">Training</div><div style="font-family:Syne;font-size:22px;font-weight:800;color:var(--accent2)">${(mr.training_need.f1*100).toFixed(1)}%</div><div style="font-size:10px;color:var(--text3)">Random Forest</div></div>` : ''}
+        </div>
+      </div>
+      <div class="chart-card" style="flex:1">
+        <div class="chart-title">Top Attrition Features</div>
+        <div class="chart-sub">Most predictive factors</div>
+        <div style="margin-top:10px">
+          ${Object.entries(d.top_features).slice(0,5).map(([k,v]) => `
+            <div class="reason-item">
+              <div class="reason-header"><span class="reason-name" style="font-size:12px">${k.replace(/_/g,' ')}</span><span class="reason-count">${(v*100).toFixed(1)}%</span></div>
+              <div class="progress-bar"><div class="progress-fill" style="width:${v*100*3}%;background:var(--accent)"></div></div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+  const lvlOrder = ['Junior','Mid','Senior','Lead','Manager','Director'];
+  const salKeys = lvlOrder.filter(k => d.salary_by_level[k]);
+  mkBar('chart-salary', salKeys, salKeys.map(k => d.salary_by_level[k]), 'green');
+}
+
+// ─── PERFORMANCE ──────────────────────────────────────────────────
+async function loadPerformance() {
+  if (perfData) { renderPerformance(perfData); return; }
+  const res = await fetch('/api/performance');
+  perfData = await res.json();
+  renderPerformance(perfData);
+}
+
+function renderPerformance(d) {
+  document.getElementById('perf-count').textContent = d.total_top.toLocaleString();
+
+  // Best per branch cards
+  document.getElementById('best-per-branch').innerHTML = d.best_per_branch.map(b => `
+    <div class="branch-card">
+      <div class="branch-name">📍 ${b.branch}</div>
+      <div class="branch-emp-id">${b.employee_id}</div>
+      <div class="branch-dept">${b.department} · ${b.job_level}</div>
+      <div class="branch-score">
+        <span class="branch-score-val">${b.performance_score}</span>
+        <span class="branch-score-label">/ 5.0 score</span>
+      </div>
+      <div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${b.performance_prob*100}%;background:var(--accent3)"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:6px">
+        <span style="font-size:11px;color:var(--text3)">🎯 ${b.projects} projects</span>
+        <span style="font-size:11px;color:var(--text3)">📚 ${b.training_hours}h training</span>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('perf-charts').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Performance Score by Department</div><div class="chart-sub">Average scores across departments</div><div class="chart-wrap"><canvas id="chart-perf-dept"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Top Performers by Branch</div><div class="chart-sub">Count of high-performance predictions</div><div class="chart-wrap"><canvas id="chart-top-branch"></canvas></div></div>
+  `;
+  mkBar('chart-perf-dept', Object.keys(d.perf_by_dept), Object.values(d.perf_by_dept), 'green');
+  mkBar('chart-top-branch', Object.keys(d.top_by_branch), Object.values(d.top_by_branch), 'purple');
+
+  const rows = d.employees.slice(0, 200).map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-purple">${e.Job_Level}</span></td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${e.Projects_Completed}</td><td>${e.Training_Hours_Per_Year}h</td>
+    <td>${e.Certifications}</td>
+    <td>${probBar(e.Pred_Performance_Prob, 'green')}</td>
+    <td><span class="badge badge-gray">${e.Best_Branch_Fit}</span></td>
+  </tr>`).join('');
+  document.getElementById('perf-tbody').innerHTML = rows;
+}
+
+// ─── ATTRITION ────────────────────────────────────────────────────
+let attrAllRows = [];
+async function loadAttrition() {
+  if (attritionData) { renderAttrition(attritionData); return; }
+  const res = await fetch('/api/attrition');
+  attritionData = await res.json();
+  renderAttrition(attritionData);
+}
+
+function renderAttrition(d) {
+  document.getElementById('attr-count').textContent = d.total_at_risk + ' employees';
+
+  document.getElementById('attr-charts-top').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Risk Level Distribution</div><div class="chart-sub">All employees by risk category</div><div class="chart-wrap"><canvas id="chart-risk-dist"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Attrition Risk by Branch</div><div class="chart-sub">% of employees at risk per branch</div><div class="chart-wrap"><canvas id="chart-attr-branch"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">Top Risk Factors</div>
+      <div class="chart-sub">Why employees are flagged</div>
+      <div style="margin-top:12px">
+        ${Object.entries(d.reasons).map(([k,v]) => `
+          <div class="reason-item">
+            <div class="reason-header"><span class="reason-name">${k}</span><span class="reason-count">${v}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${v/d.total_at_risk*100}%;background:var(--accent2)"></div></div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+  mkDoughnut('chart-risk-dist',
+    Object.keys(d.risk_dist), Object.values(d.risk_dist),
+    ['rgba(255,107,107,0.8)', 'rgba(255,179,71,0.8)', 'rgba(6,214,160,0.8)']
+  );
+  const branchData = d.attr_by_branch;
+  mkBar('chart-attr-branch', branchData.map(b=>b.Branch), branchData.map(b=>b.pct), 'red', { pct: true });
+
+  attrAllRows = d.employees;
+  renderAttrRows(attrAllRows);
+}
+
+function renderAttrRows(rows) {
+  document.getElementById('attr-tbody').innerHTML = rows.slice(0,300).map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-gray">${e.Job_Level}</span></td>
+    <td>${e.Manager_Satisfaction}/5</td>
+    <td>${e.Absence_Days_Per_Year} days</td>
+    <td>${e.Last_Raise_Pct}%</td>
+    <td>${e.Overtime_Hours_Per_Month}h</td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${riskBadge(e.Attrition_Risk)}</td>
+    <td>${probBar(e.Pred_Attrition_Prob, 'red')}</td>
+  </tr>`).join('');
+}
+
+function filterAttrTable() {
+  const q = document.getElementById('attr-search').value.toLowerCase();
+  renderAttrRows(attrAllRows.filter(e => e.Employee_ID.toLowerCase().includes(q)));
+}
+
+// ─── OFFBOARDING ──────────────────────────────────────────────────
+async function loadOffboarding() {
+  if (offboardData) { renderOffboarding(offboardData); return; }
+  const res = await fetch('/api/offboarding');
+  offboardData = await res.json();
+  renderOffboarding(offboardData);
+}
+
+function renderOffboarding(d) {
+  document.getElementById('off-count').textContent = d.total + ' employees';
+
+  document.getElementById('off-charts').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Offboarding by Department</div><div class="chart-sub">% flagged per department</div><div class="chart-wrap"><canvas id="chart-off-dept"></canvas></div></div>
+    <div class="chart-card">
+      <div class="chart-title">Primary Reasons</div>
+      <div class="chart-sub">Why employees are recommended for offboarding</div>
+      <div style="margin-top:12px">
+        ${Object.entries(d.reason_counts).map(([k,v]) => `
+          <div class="reason-item">
+            <div class="reason-header"><span class="reason-name">${k}</span><span class="reason-count">${v}</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:${v/d.total*100}%;background:var(--accent2)"></div></div>
+          </div>`).join('')}
+      </div>
+    </div>
+  `;
+  const deptData = d.off_by_dept.filter(x => x.to_offboard > 0);
+  mkBar('chart-off-dept', deptData.map(x=>x.Department), deptData.map(x=>x.pct), 'orange', { pct: true });
+
+  document.getElementById('off-tbody').innerHTML = d.employees.map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent2)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-gray">${e.Job_Level}</span></td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${e.Absence_Days_Per_Year} days</td>
+    <td>${e.Projects_Completed}</td>
+    <td>${e.Manager_Satisfaction}/5</td>
+    <td>${probBar(e.Pred_Offboard_Prob, 'orange')}</td>
+    <td><span style="font-size:11px;color:var(--accent2)">${e.Offboard_Reason||'—'}</span></td>
+  </tr>`).join('');
+}
+
+// ─── PROMOTION ──────────────────────────────────────────────────────
+async function loadPromotion() {
+  if (promoData) { renderPromotion(promoData); return; }
+  const res = await fetch('/api/promotion');
+  promoData = await res.json();
+  renderPromotion(promoData);
+}
+
+function renderPromotion(d) {
+  if (d.error) {
+    document.getElementById('promo-count').textContent = '0';
+    document.getElementById('promo-tbody').innerHTML = `<tr><td colspan="10" style="color:var(--text3)">${d.error}</td></tr>`;
+    return;
+  }
+  document.getElementById('promo-count').textContent = d.total.toLocaleString() + ' employees';
+
+  document.getElementById('promo-charts').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Promotion Likely by Department</div><div class="chart-sub">% of employees flagged per department</div><div class="chart-wrap"><canvas id="chart-promo-dept"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Promotion Likely by Branch</div><div class="chart-sub">Count of flagged employees</div><div class="chart-wrap"><canvas id="chart-promo-branch"></canvas></div></div>
+  `;
+  const deptData = d.promo_by_dept.filter(x => x.likely > 0);
+  mkBar('chart-promo-dept', deptData.map(x=>x.Department), deptData.map(x=>x.pct), 'green', { pct: true });
+  mkBar('chart-promo-branch', Object.keys(d.promo_by_branch), Object.values(d.promo_by_branch), 'purple');
+
+  document.getElementById('promo-tbody').innerHTML = d.employees.map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent3)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-purple">${e.Job_Level}</span></td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${e.Experience_Years} yrs</td>
+    <td>${e.Promotions_Count}</td>
+    <td>${e.Manager_Satisfaction}/5</td>
+    <td>${e.Salary_EGP?.toLocaleString()} EGP</td>
+    <td>${probBar(e.Pred_Promotion_Prob, 'green')}</td>
+  </tr>`).join('');
+}
+
+// ─── TRAINING NEED ──────────────────────────────────────────────────
+async function loadTrainingNeed() {
+  if (trainingData) { renderTrainingNeed(trainingData); return; }
+  const res = await fetch('/api/training_need');
+  trainingData = await res.json();
+  renderTrainingNeed(trainingData);
+}
+
+function renderTrainingNeed(d) {
+  if (d.error) {
+    document.getElementById('training-count').textContent = '0';
+    document.getElementById('training-tbody').innerHTML = `<tr><td colspan="10" style="color:var(--text3)">${d.error}</td></tr>`;
+    return;
+  }
+  document.getElementById('training-count').textContent = d.total.toLocaleString() + ' employees';
+
+  document.getElementById('training-charts').innerHTML = `
+    <div class="chart-card"><div class="chart-title">Training Need by Department</div><div class="chart-sub">% of employees flagged per department</div><div class="chart-wrap"><canvas id="chart-training-dept"></canvas></div></div>
+    <div class="chart-card"><div class="chart-title">Training Need Overview</div><div class="chart-sub">Flagged vs. rest of workforce</div><div class="chart-wrap"><canvas id="chart-training-split"></canvas></div></div>
+  `;
+  const deptData = d.train_by_dept.filter(x => x.needed > 0);
+  mkBar('chart-training-dept', deptData.map(x=>x.Department), deptData.map(x=>x.pct), 'orange', { pct: true });
+  const totalAll = d.train_by_dept.reduce((a,x)=>a+x.total, 0);
+  mkDoughnut('chart-training-split', ['Needs Training', 'Rest of Workforce'], [d.total, totalAll - d.total], ['rgba(255,179,71,0.8)', 'rgba(108,99,255,0.4)']);
+
+  document.getElementById('training-tbody').innerHTML = d.employees.map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent2)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-gray">${e.Job_Level}</span></td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${e.Training_Hours_Per_Year}h</td>
+    <td>${e.Skills_Count}</td>
+    <td>${e.Certifications}</td>
+    <td>${e.Manager_Satisfaction}/5</td>
+    <td>${probBar(e.Pred_TrainingNeed_Prob, 'orange')}</td>
+  </tr>`).join('');
+}
+
+// ─── EMPLOYEES ────────────────────────────────────────────────────
+async function loadEmployees(page=1) {
+  empPage = page;
+  const search = document.getElementById('emp-search')?.value || '';
+  const branch = document.getElementById('emp-branch')?.value || '';
+  const dept = document.getElementById('emp-dept')?.value || '';
+  const risk = document.getElementById('emp-risk')?.value || '';
+  const url = `/api/employees?page=${page}&per_page=50&search=${search}&branch=${branch}&dept=${dept}&risk=${risk}`;
+  const res = await fetch(url);
+  const d = await res.json();
+
+  // Populate filters (first time)
+  const branchSel = document.getElementById('emp-branch');
+  if (branchSel && branchSel.options.length === 1) {
+    d.branches.forEach(b => { const o = document.createElement('option'); o.value = b; o.text = b; branchSel.appendChild(o); });
+  }
+  const deptSel = document.getElementById('emp-dept');
+  if (deptSel && deptSel.options.length === 1) {
+    d.depts.forEach(b => { const o = document.createElement('option'); o.value = b; o.text = b; deptSel.appendChild(o); });
+  }
+
+  document.getElementById('emp-total').textContent = d.total.toLocaleString() + ' employees';
+  document.getElementById('emp-page-info').textContent = `Page ${d.page} of ${d.pages} · ${d.total.toLocaleString()} results`;
+
+  document.getElementById('emp-tbody').innerHTML = d.employees.map(e => `<tr>
+    <td><span class="tag" style="color:var(--accent)">${e.Employee_ID}</span></td>
+    <td>${e.Branch}</td><td>${e.Department}</td>
+    <td><span class="badge badge-purple">${e.Job_Level}</span></td>
+    <td>${e.Performance_Score?.toFixed(1)}</td>
+    <td>${e.Salary_EGP?.toLocaleString()} EGP</td>
+    <td>${e.Experience_Years} yrs</td>
+    <td>${riskBadge(e.Attrition_Risk)}</td>
+    <td>${boolBadge(e.Pred_Performance, 'Yes', 'No')}</td>
+    <td>${offBadge(e.Pred_Offboard)}</td>
+    <td><span class="badge badge-gray">${e.Best_Branch_Fit}</span></td>
+  </tr>`).join('');
+
+  // Pagination
+  const pages = d.pages;
+  let btns = '';
+  btns += `<button class="page-btn" onclick="loadEmployees(${page-1})" ${page===1?'disabled':''}>‹</button>`;
+  const start = Math.max(1, page-2), end = Math.min(pages, page+2);
+  for (let p = start; p <= end; p++) btns += `<button class="page-btn ${p===page?'active':''}" onclick="loadEmployees(${p})">${p}</button>`;
+  btns += `<button class="page-btn" onclick="loadEmployees(${page+1})" ${page===pages?'disabled':''}>›</button>`;
+  document.getElementById('emp-pagination').innerHTML = btns;
+}
+
+function empSearch() {
+  clearTimeout(empSearch_timeout);
+  empSearch_timeout = setTimeout(() => loadEmployees(1), 300);
+}
+
+// ─── UPLOAD ───────────────────────────────────────────────────────
+let selectedFile = null;
+
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('drop-zone').style.borderColor = 'var(--border)';
+  const file = e.dataTransfer.files[0];
+  if (file) setFile(file);
+}
+
+function handleFileSelect(input) {
+  if (input.files[0]) setFile(input.files[0]);
+}
+
+function setFile(file) {
+  selectedFile = file;
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+  document.getElementById('file-name').textContent = file.name;
+  document.getElementById('file-size').textContent = `${sizeMB} MB · ${file.name.split('.').pop().toUpperCase()}`;
+  document.getElementById('file-info').style.display = 'block';
+  document.getElementById('upload-results').style.display = 'none';
+  document.getElementById('upload-error').style.display = 'none';
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = false;
+  btn.style.opacity = '1';
+}
+
+function clearFile() {
+  selectedFile = null;
+  document.getElementById('file-info').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  const btn = document.getElementById('upload-btn');
+  btn.disabled = true;
+  btn.style.opacity = '0.4';
+}
+
+async function uploadFile() {
+  if (!selectedFile) return;
+
+  // Show progress
+  document.getElementById('upload-progress').style.display = 'block';
+  document.getElementById('upload-results').style.display = 'none';
+  document.getElementById('upload-error').style.display = 'none';
+  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('upload-btn').style.opacity = '0.5';
+
+  const steps = [
+    [15, 'Reading Excel file...'],
+    [35, 'Validating columns...'],
+    [55, 'Preprocessing data...'],
+    [75, 'Running ML predictions...'],
+    [90, 'Saving results...'],
+  ];
+
+  let stepIdx = 0;
+  const ticker = setInterval(() => {
+    if (stepIdx < steps.length) {
+      document.getElementById('progress-fill').style.width = steps[stepIdx][0] + '%';
+      document.getElementById('progress-text').textContent = steps[stepIdx][1];
+      stepIdx++;
+    }
+  }, 600);
+
+  const form = new FormData();
+  form.append('file', selectedFile);
+
+  try {
+    const res = await fetch('/api/upload', { method: 'POST', body: form });
+    const data = await res.json();
+    clearInterval(ticker);
+
+    if (data.success) {
+      document.getElementById('progress-fill').style.width = '100%';
+      document.getElementById('progress-text').textContent = 'Done!';
+      setTimeout(() => { document.getElementById('upload-progress').style.display = 'none'; }, 600);
+
+      // Reset cached data so dashboard reloads
+      overviewData = null; attritionData = null; offboardData = null; perfData = null;
+
+      const s = data.stats;
+      document.getElementById('result-summary').textContent =
+        `${s.total.toLocaleString()} employees processed · ${s.attrition_risk} at attrition risk · ${s.to_offboard} flagged for offboarding`;
+
+      document.getElementById('upload-kpis').innerHTML = `
+        <div class="kpi-card purple"><div class="kpi-icon">👥</div><div class="kpi-label">Total Processed</div><div class="kpi-value">${s.total.toLocaleString()}</div><div class="kpi-sub">From uploaded file</div></div>
+        <div class="kpi-card green"><div class="kpi-icon">⬡</div><div class="kpi-label">Top Performers</div><div class="kpi-value">${s.top_performers.toLocaleString()}</div><div class="kpi-sub">${s.performers_pct}% of upload</div></div>
+        <div class="kpi-card red"><div class="kpi-icon">⚠</div><div class="kpi-label">Attrition Risk</div><div class="kpi-value">${s.attrition_risk.toLocaleString()}</div><div class="kpi-sub">${s.attrition_pct}% of upload</div></div>
+        <div class="kpi-card orange"><div class="kpi-icon">✕</div><div class="kpi-label">Offboarding</div><div class="kpi-value">${s.to_offboard.toLocaleString()}</div><div class="kpi-sub">${s.offboard_pct}% of upload</div></div>
+      `;
+      document.getElementById('upload-results').style.display = 'block';
+      document.getElementById('badge-attrition').textContent = s.attrition_risk;
+      document.getElementById('badge-offboard').textContent = s.to_offboard;
+    } else {
+      document.getElementById('upload-progress').style.display = 'none';
+      document.getElementById('error-msg').textContent = data.error;
+      document.getElementById('upload-error').style.display = 'block';
+    }
+  } catch (err) {
+    clearInterval(ticker);
+    document.getElementById('upload-progress').style.display = 'none';
+    document.getElementById('error-msg').textContent = 'Network error: ' + err.message;
+    document.getElementById('upload-error').style.display = 'block';
+  }
+
+  document.getElementById('upload-btn').disabled = false;
+  document.getElementById('upload-btn').style.opacity = '1';
+}
+
+// ─── CHAT ─────────────────────────────────────────────────────────
+let chatHistory = [];
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function chatKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
+}
+
+function sendSuggestion(el) {
+  document.getElementById('chat-input').value = el.textContent.trim();
+  sendChat();
+}
+
+function toggleFaq(button) {
+  const item = button.closest('.faq-item');
+  const wrapper = item.querySelector('.faq-answer-wrapper');
+  const isOpen = item.classList.contains('open');
+
+  if (isOpen) {
+    wrapper.style.height = wrapper.scrollHeight + 'px';
+    requestAnimationFrame(() => {
+      wrapper.style.height = '0px';
+    });
+    item.classList.remove('open');
+    button.querySelector('.faq-toggle-icon').textContent = '+';
+  } else {
+    const targetHeight = wrapper.scrollHeight + 12;
+    wrapper.style.height = targetHeight + 'px';
+    item.classList.add('open');
+    button.querySelector('.faq-toggle-icon').textContent = '−';
+    wrapper.addEventListener('transitionend', function handler() {
+      if (item.classList.contains('open')) {
+        wrapper.style.height = 'auto';
+      }
+      wrapper.removeEventListener('transitionend', handler);
+    });
+  }
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('chat-messages').innerHTML = `
+    <div class="chat-msg assistant">
+      <div class="msg-avatar">🤖</div>
+      <div class="msg-bubble">تم مسح المحادثة. كيف أقدر أساعدك؟</div>
+    </div>`;
+}
+
+function appendMsg(role, content) {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = `chat-msg ${role}`;
+  const avatar = role === 'user' ? '👤' : (role === 'error' ? '⚠' : '🤖');
+  div.innerHTML = `
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-bubble">${content}</div>
+  `;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const container = document.getElementById('chat-messages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg assistant';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="msg-avatar">🤖</div>
+    <div class="msg-bubble">
+      <div class="typing-indicator">
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+        <div class="typing-dot"></div>
+      </div>
+    </div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-indicator');
+  if (el) el.remove();
+}
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const question = input.value.trim();
+  if (!question) return;
+
+  // Get API key (from input or env)
+  const apiKeyInput = document.getElementById('api-key-input').value.trim();
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Show user message
+  appendMsg('user', question);
+  chatHistory.push({ role: 'user', content: question });
+
+  // Disable send
+  const btn = document.getElementById('chat-send-btn');
+  btn.disabled = true;
+  btn.textContent = '...';
+
+  addTyping();
+
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(apiKeyInput ? { 'X-API-Key': apiKeyInput } : {})
+      },
+      body: JSON.stringify({ question, history: chatHistory.slice(-10) })
+    });
+
+    const data = await res.json();
+    removeTyping();
+
+    if (data.success) {
+      appendMsg('assistant', data.answer);
+      chatHistory.push({ role: 'assistant', content: data.answer });
+    } else {
+      appendMsg('error', `❌ ${data.error}`);
+    }
+  } catch (err) {
+    removeTyping();
+    appendMsg('error', `❌ خطأ في الاتصال: ${err.message}`);
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'إرسال ↑';
+  document.getElementById('chat-messages').scrollTop = 9999;
+}
+
+// Init
+loadOverview();
+</script>
+</body>
+</html>

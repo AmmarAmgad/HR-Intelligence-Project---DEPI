@@ -1,0 +1,23 @@
+{
+  "Manager_Satisfaction": 0.2336233676176077,
+  "Last_Raise_Pct": 0.16197073733914952,
+  "Performance_Score": 0.14109833852588263,
+  "Absence_Days_Per_Year": 0.11876827860201422,
+  "Promotions_Count": 0.09321820254840336,
+  "Overtime_Hours_Per_Month": 0.08250278487367653,
+  "Experience_Years": 0.033626473413233625,
+  "Certifications": 0.017816972795574815,
+  "Branch": 0.016750379437438647,
+  "Training_Hours_Per_Year": 0.01580067233942784,
+  "Department": 0.015363167789579621,
+  "WFH_Days_Per_Week": 0.01424617964585536,
+  "Job_Level": 0.012689164937467029,
+  "Skills_Count": 0.007959256275874495,
+  "Projects_Completed": 0.007745737381557532,
+  "Age": 0.0077112889237905945,
+  "Salary_EGP": 0.0071583085760437174,
+  "Education_Level": 0.004392500413423676,
+  "Contract_Type": 0.0030157621888690237,
+  "Team_Size_Managed": 0.0028155841689994953,
+  "Gender": 0.0017268422061305162
+}
