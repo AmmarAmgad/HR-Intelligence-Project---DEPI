@@ -1,5 +1,7 @@
 # HR Intelligence Project
 
+![Overview screenshot](MAIN_SCREENSHOT.png)
+
 A Flask-based HR analytics dashboard that predicts employee attrition, performance, offboarding risk, promotion readiness, and training needs using machine learning models.
 
 ## Features
